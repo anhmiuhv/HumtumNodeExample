@@ -19,6 +19,7 @@ function approveFriendRequest(senderid, button) {
   }).then(v => {
     button.html("Approved")
     button.prop("disabled", true)
+    refreshFriends()
   })
 }
 
@@ -29,6 +30,35 @@ function rejectFriendRequest(senderid, button) {
   }).then(v => {
     button.html("Rejected")
     button.prop("disabled", true)
+  })
+}
+
+function refreshFriendRequests() {
+  humtum.getFriendRequests(envVariables.appId).then(data => {
+    console.log(data)
+    listerner = []
+    let txt = ""
+    txt += "<table id=\"notitable\" class=\"table\"><tbody></tbody>"
+    data && data.sent && data.sent.forEach(element => {
+      txt += `<tr><td>${element.receiver.name}</td><td>${element.status}</td></tr>`;
+    });
+    data && data.received && data.received.forEach(element => {
+      txt += `<tr><td>${element.sender.name}</td><td>
+      <button class="btn btn-primary" id="friendrequestreceivedbutton${element.id}">Approve</button>
+      <button class="btn btn-primary" id="friendrequestreceivedbutton${element.id}reject">Reject</button></td>
+      </tr>`;
+      listerner.push(() => {
+        $(`#friendrequestreceivedbutton${element.id}`).click(function () {
+          approveFriendRequest(element.sender.id, $(this))
+        })
+        $(`#friendrequestreceivedbutton${element.id}reject`).click(function () {
+          rejectFriendRequest(element.sender.id, $(this))
+        })
+      })
+    });
+    txt += "</table>"
+    $("#notifications").html(txt)
+    listerner.forEach(v => v())
   })
 }
 
@@ -87,43 +117,15 @@ webContents.on('dom-ready', () => {
   })
 
   refreshFriends()
-
-
-  humtum.getFriendRequests(envVariables.appId).then(data => {
-    console.log(data)
-    listerner = []
-    let txt = ""
-    txt += "<table id=\"notitable\" class=\"table\"><tbody></tbody>"
-    data && data.sent && data.sent.forEach(element => {
-      txt += `<tr><td>${element.receiver.name}</td><td>${element.status}</td></tr>`;
-    });
-    data && data.received && data.received.forEach(element => {
-      txt += `<tr><td>${element.sender.name}</td><td>
-      <button class="btn btn-primary" id="friendrequestreceivedbutton${element.id}">Approve</button>
-      <button class="btn btn-primary" id="friendrequestreceivedbutton${element.id}reject">Reject</button></td>
-      </tr>`;
-      listerner.push(() => {
-        $(`#friendrequestreceivedbutton${element.id}`).click(function () {
-          approveFriendRequest(element.sender.id, $(this))
-          refreshFriends()
-        })
-        $(`#friendrequestreceivedbutton${element.id}reject`).click(function () {
-          rejectFriendRequest(element.sender.id, $(this))
-        })
-      })
-    });
-    txt += "</table>"
-    $("#notifications").html(txt)
-    listerner.forEach(v => v())
-  })
-
-  
+  refreshFriendRequests()
 
   document.getElementById("friendsbtn").onclick = () => {
     humtum.addFriend(envVariables.appId, document.getElementById("friendid").value, (e) => {
       $("#friendrequeststatus").text(String(e))
     }).then(v => {
       $("#friendrequeststatus").text(String(v))
+      refreshFriendRequests()
+
     })
   }
 
