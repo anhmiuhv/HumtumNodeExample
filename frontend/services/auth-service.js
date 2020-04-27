@@ -5,9 +5,12 @@ const envVariables = require('../env-variables');
 const keytar = require('keytar');
 const os = require('os');
 
-const {apiIdentifier, auth0Domain, clientId} = envVariables;
-
-const redirectUri = "http://com.securitypoke.linhhoang";
+const {
+  apiIdentifier,
+  auth0Domain,
+  clientId,
+  redirectUri
+} = envVariables;
 
 const keytarService = 'electron-openid-oauth';
 const keytarAccount = os.userInfo().username;
@@ -16,6 +19,7 @@ let accessToken = null;
 let idToken = null;
 let profile = null;
 let refreshToken = null;
+let scopes = []
 
 function getAccessToken() {
   return accessToken;
@@ -32,11 +36,21 @@ function getProfile() {
 function isAuthenticated() {
   return profile != null;
 }
+function check(x) {
+  return Array.isArray(x) && x.every(function (i) {
+    return typeof i === "string"
+  });
+}
+
+function setScopes(scope) {
+  if (check(scope))
+  scopes = scope
+}
 
 function getAuthenticationURL() {
   return 'https://' + auth0Domain + '/authorize?' +
     'audience=' + apiIdentifier + '&' +
-    'scope=openid email profile offline_access&' +
+    `scope=openid email profile offline_access ${scopes.join(' ')}&` +
     'response_type=code&' +
     'client_id=' + clientId + '&' +
     'redirect_uri=' + redirectUri;
@@ -137,4 +151,5 @@ module.exports = {
   refreshTokens,
   isAuthenticated,
   getIDToken,
+  setScopes
 };

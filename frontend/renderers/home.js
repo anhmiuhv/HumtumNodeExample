@@ -32,6 +32,37 @@ function rejectFriendRequest(senderid, button) {
   })
 }
 
+function refreshFriends() {
+  humtum.getFriends(envVariables.appId).then(data => {
+    let txt = ""
+    let listerner = []
+    txt += "<table class=\"table\">"
+
+    data && data.forEach(element => {
+      txt += `<tr><td>${element.name}</td>
+      <td><button class="btn btn-primary" id="friendMessage${element.id}">Send message</button></td>
+      </tr>`;
+
+      listerner.push(() => {
+        $(`#friendMessage${element.id}`).click(() => {
+          if (profileHumtum)
+            humtum.createMessage({
+              description: "message",
+              app_id: envVariables.appId,
+              payload: "poke",
+              targets: [element.id]
+            })
+
+        })
+      })
+    })
+
+    txt += "</table>"
+    $("#friends").html(txt)
+    listerner.forEach(v => v())
+  })
+}
+
 
 
 webContents.on('dom-ready', () => {
@@ -55,16 +86,18 @@ webContents.on('dom-ready', () => {
     profileHumtum = data
   })
 
+  refreshFriends()
+
 
   humtum.getFriendRequests(envVariables.appId).then(data => {
     console.log(data)
     listerner = []
     let txt = ""
-    txt += "<table id=\"notitable\" class=\"table\">"
-    data.sent.forEach(element => {
+    txt += "<table id=\"notitable\" class=\"table\"><tbody></tbody>"
+    data && data.sent && data.sent.forEach(element => {
       txt += `<tr><td>${element.receiver.name}</td><td>${element.status}</td></tr>`;
     });
-    data.received.forEach(element => {
+    data && data.received && data.received.forEach(element => {
       txt += `<tr><td>${element.sender.name}</td><td>
       <button class="btn btn-primary" id="friendrequestreceivedbutton${element.id}">Approve</button>
       <button class="btn btn-primary" id="friendrequestreceivedbutton${element.id}reject">Reject</button></td>
@@ -72,6 +105,7 @@ webContents.on('dom-ready', () => {
       listerner.push(() => {
         $(`#friendrequestreceivedbutton${element.id}`).click(function () {
           approveFriendRequest(element.sender.id, $(this))
+          refreshFriends()
         })
         $(`#friendrequestreceivedbutton${element.id}reject`).click(function () {
           rejectFriendRequest(element.sender.id, $(this))
@@ -83,48 +117,18 @@ webContents.on('dom-ready', () => {
     listerner.forEach(v => v())
   })
 
-  humtum.getFriends(envVariables.appId).then(data => {
-    let txt = ""
-    let listerner = []
-    txt += "<table class=\"table\">"
-
-    data.forEach(element => {
-      txt += `<tr><td>${element.name}</td>
-      <td><button class="btn btn-primary" id="friendMessage${element.id}">Send message</button></td>
-      </tr>`;
-
-      listerner.push(() => {
-        $(`#friendMessage${element.id}`).click(() => {
-        if (profileHumtum)
-          humtum.createMessage({
-            description: "message",
-            app_id: envVariables.appId,
-            payload: "poke",
-            targets: [element.id]
-          })
-
-      })})
-    })
-
-    txt += "</table>"
-    $("#friends").html(txt)
-    listerner.forEach(v => v())
-  })
+  
 
   document.getElementById("friendsbtn").onclick = () => {
     humtum.addFriend(envVariables.appId, document.getElementById("friendid").value, (e) => {
       $("#friendrequeststatus").text(String(e))
     }).then(v => {
       $("#friendrequeststatus").text(String(v))
-      humtum.getFriends(envVariables.appId).then(f => {
-        console.log(f)
-      })
     })
   }
 
   humtum.getMessage({unread: true}).then(data => {
-    data.forEach(d => {
-        console.log(d)
+    data && data.forEach(d => {
         $('#notitable tr:last').after(`<tr><td>${d["sender"]["id"]}</td><td>${d.payload}</td></tr>`);
         humtum.receiveMessage(d.id)
     })
@@ -139,8 +143,9 @@ webContents.on('dom-ready', () => {
 
     },
     (data) => {
-      data = JSON.parse(data) 
-      $('#notitable tr:last').after(`<tr><td>${data["sender_id"]}</td><td>${data["payload"]}</td></tr>`);
+      console.log(data)
+      data = JSON.parse(data)
+      $('#notitable > tbody:last-child').append(`<tr><td>${data["sender_id"]}</td><td>${data["payload"]}</td></tr>`);
       humtum.receiveMessage(data["id"])
     }
 

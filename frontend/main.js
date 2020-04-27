@@ -4,6 +4,8 @@ const {createAuthWindow} = require('./main/auth-process');
 const {createAppWindow} = require('./main/app-process');
 const authService = require('./services/auth-service');
 const humtum = require("./services/humtum")
+const envVariables = require('./env-variables');
+
 
 humtum.setAPICredentials("123", "456")
 async function showWindow() {

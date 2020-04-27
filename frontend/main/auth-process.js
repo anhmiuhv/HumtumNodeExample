@@ -1,6 +1,9 @@
 const {BrowserWindow} = require('electron');
 const authService = require('../services/auth-service');
 const {createAppWindow} = require('../main/app-process');
+const humtum = require('../services/humtum')
+const envVariables = require('../env-variables');
+
 
 let win = null;
 
@@ -24,13 +27,20 @@ function createAuthWindow() {
   };
 
   webRequest.onBeforeRequest(filter, async ({url}) => {
-    console.log(url)
     await authService.loadTokens(url);
-    createAppWindow();
-    return destroyAuthWin();
+    await humtum.enrollInApp(envVariables.appId, (e) => {
+      createAppWindow();
+      destroyAuthWin();
+    }).then(data => {
+      if (data == null) return
+      humtum.getAuth().setScopes(["read:appdata", "write:appdata"])
+      win.loadURL(authService.getAuthenticationURL());
+
+    })
   });
 
   win.on('authenticated', () => {
+
     destroyAuthWin();
   });
 
