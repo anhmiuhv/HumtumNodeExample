@@ -35,7 +35,6 @@ function rejectFriendRequest(senderid, button) {
 
 function refreshFriendRequests() {
   humtum.getFriendRequests(envVariables.appId).then(data => {
-    console.log(data)
     listerner = []
     let txt = ""
     txt += "<table id=\"notitable\" class=\"table\"><tbody></tbody>"
@@ -96,7 +95,6 @@ function refreshFriends() {
 
 
 webContents.on('dom-ready', () => {
-  console.log(authService.getAccessToken())
   const profile = authService.getProfile();
   document.getElementById('picture').src = profile.picture;
   document.getElementById('name').innerText = profile.name;
@@ -145,7 +143,6 @@ webContents.on('dom-ready', () => {
 
     },
     (data) => {
-      console.log(data)
       data = JSON.parse(data)
       $('#notitable > tbody:last-child').append(`<tr><td>${data["sender_id"]}</td><td>${data["payload"]}</td></tr>`);
       humtum.receiveMessage(data["id"])

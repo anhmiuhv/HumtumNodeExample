@@ -27,16 +27,24 @@ function createAuthWindow() {
   };
 
   webRequest.onBeforeRequest(filter, async ({url}) => {
-    await authService.loadTokens(url);
-    await humtum.enrollInApp(envVariables.appId, (e) => {
-      createAppWindow();
-      destroyAuthWin();
-    }).then(data => {
-      if (data == null) return
-      humtum.getAuth().setScopes(["read:appdata", "write:appdata"])
-      win.loadURL(authService.getAuthenticationURL());
+    try {
+      await authService.loadTokens(url);
+      await humtum.enrollInApp(envVariables.appId, (e) => {
+        createAppWindow();
+        destroyAuthWin();
+      }).then(data => {
+        console.log(1)
+        console.log(data)
+        if (data == null) return
+        win.loadURL(authService.getAuthenticationURL());
 
-    })
+      })
+    } catch(error){
+      console.log(2)
+      console.error(error);
+
+    };
+
   });
 
   win.on('authenticated', () => {

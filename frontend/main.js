@@ -6,6 +6,7 @@ const authService = require('./services/auth-service');
 const humtum = require("./services/humtum")
 const envVariables = require('./env-variables');
 
+humtum.getAuth().setScopes(["read:appdata", "write:appdata"])
 
 humtum.setAPICredentials("123", "456")
 async function showWindow() {
