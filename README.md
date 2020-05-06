@@ -1,34 +1,45 @@
-# Securing Electron Applications with OpenID Connect and OAuth 2.0
+# Creating Electron client for your Humtum application “Security Poke”
 
-Learn how to secure your Electron applications using standards like OpenID Connect and OAuth 2.0. This article originally appeared on Auth0 Blog: [How to Secure Electron Apps with OpenID Connect and OAuth 2.0](https://auth0.com/blog/securing-electron-applications-with-openid-connect-and-oauth-2/)
+## Introduction
+Our application is constructed from the concepts and the codes in the article [How to Secure Electron Apps with OpenID Connect and OAuth 2.0](https://auth0.com/blog/securing-electron-applications-with-openid-connect-and-oauth-2/).
+The original code is [here](https://github.com/auth0-blog/electron-openid-oauth)
 
----
-## Sample From the Article:
+It is recommended that you understand how to use Auth0 before starting developing on the Humtum platform
 
-**TL;DR:** In this article, you will learn how to secure Electron applications with OpenID Connect and OAuth 2.0. You don't need to be an expert in any of these technologies to follow this article along because the instructions will guide you through the whole thing. However, if you want to [learn about OpenID Connect, you can check this documentation](https://auth0.com/docs/protocols/oidc) and, [if you want to learn about OAuth, you can check this one](https://auth0.com/docs/protocols/oauth2).
+## How to start running this client
+1. Create Humtum application Security Poke
+Go through the Humtum application creation workflow. In this example, we created an application named security_poke. Once security_poke is created, take note of the ID of the app and the api identifier of the app, which is in the format `com.humtum.api.<app-name>`. For our example, the api identifier is `com.humtum.api.security_poke`.
 
-### Prerequisites
+![How to find App id](img/appid.png)
 
-To follow this article along without trouble, you are expected to have some basic skills with Node.js and JavaScript. JavaScript is mandatory but, if you don't know Node.js, you might still be able to move through the article.
+2. Create third party client ID
+Humtum Auth0 supports dynamic client registration based on the [OpenID Connect Dynamic Client Registration](https://openid.net/specs/openid-connect-registration-1_0.html) specification. Humtum Auth0 DOMAIN is humtum.auth0.com. Follow the instruction in this [link](https://auth0.com/docs/api-auth/dynamic-client-registration#register-your-application) to register a third party client ID. Replace YOUR_DOMAIN with `humtum.auth0.com`. For our examples, we can set the data to:
+```json
+{
+"client_name": "SecurityPoke Electrion",
+"redirect_uris": ["http://com.securitypoke.electron"]
+}
+```
 
-However, you do have to [have Node.js and NPM properly installed](https://nodejs.org/en/download/) in your machine. Also, some familiarity with Shell, Bash, and alike is desirable. If you are on Windows, [PowerShell](https://docs.microsoft.com/en-us/powershell/) might be the solution to your needs.
+You need to store the response somewhere secure.
 
-### What Will you Build
+3. Create environment files
+Clone this repository. Go to `frontend` folder.
+Create a file called env-variables.json with the following contents:
+```json
+{
+  "apiIdentifier": "com.humtum.api.security_poke",
+  "auth0Domain": "humtum.auth0.com",
+  "clientId": <client-id>,
+  "appId": <app-id>,
+  "redirectUri": "http://com.securitypoke.electron"
+}
+```
 
-To demonstrate how to secure Electron apps with OpenID Connect and OAuth 2.0, you are going to put together two projects. The first one is, as you might expect, an Electron application. The second one is a (very) basic RESTful API that you will use Node.js and Express to run. The backend will contain a single endpoint (`/private`) that will represent an API that only performs its job if the incoming requests have access tokens. If these requests do have valid access tokens, this endpoint will respond with a static message saying "Only authenticated users can read this message".
+4. Run the code
+Run `npm start`
 
-Although this backend API is basic, this single endpoint is enough to demonstrate how you would secure your real-world APIs (e.g., RESTful resources). That is, if you were developing a to-do list, a shopping cart feature, or anything like that, the approach would be the same.
 
-> "An Access Token is a string representing granted permissions." - [OAuth 2.0 documentation @ Auth0](https://auth0.com/docs/protocols/oauth2)
+## Code walkthrough
 
-The flow of the application will be the following:
-
-1. Your users will start the Electron application.
-2. As they were not signed in before, you Electron app will show them a login screen (a page provided by the authorization server).
-3. After authenticating, the authorization server will provide your Electron app a _code_.
-4. The Electron app will issue a request to a token endpoint to exchange this _code_ for an [access token](https://auth0.com/docs/tokens/access-token) and an [id token](https://auth0.com/docs/tokens/id-token).
-5. After getting back these tokens, the Electron app will show a secured route with where users will be able to click a button to fetch the static message from the `/private` endpoint on the API.
-
-Although simple, this workflow shows the whole picture of how you will have to integrate and secure your backend APIs and Electron apps while using OAuth 2.0 and OpenID Connect. The following screenshot shows what the app will look like when ready.
-
-[Read more](https://auth0.com/blog/securing-electron-applications-with-openid-connect-and-oauth-2/)
+The client uses Auth0 for authentications and authorizations. `auth-service.js` contains the neccessary code to authenticate the users to get the id token and request authorizations to get the access token. `humtum.js` is the library to contact with the humtum platform. You need to sign in with Auth0 before you can use Humtum.

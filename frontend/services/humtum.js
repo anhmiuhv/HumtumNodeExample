@@ -83,7 +83,6 @@ class HumTum {
     const headers = {
       'UserAuth': `Bearer ${this.getAuth().getIDToken()}`,
       'AccessAuth': `Bearer ${this.getAuth().getAccessToken()}`,
-      'ClientAuth': `${this.config['clientID']} ${this.config['clientSecret']}`
     }
     return multipart ? Object.assign(headers, {
       'Content-Type': 'multipart/form-data'
@@ -351,7 +350,7 @@ class HumTum {
 
 
   sendRequest = async (url, err, data = {}, method = 'get') => {
-    if (this.config['clientID'] && this.config['clientSecret']) {
+    if (this.getAuth().getIDToken() && this.getAuth().getAccessToken()) {
       const headers = this.createRequestHeaders()
       try {
         const response = await axios({
@@ -371,7 +370,7 @@ class HumTum {
   }
 
   sendMultipartRequest = async (url, err, formData, method = 'post') => {
-    if (this.config['clientID'] && this.config['clientSecret']) {
+    if (this.getAuth().getIDToken() && this.getAuth().getAccessToken()) {
       const config = {
         headers: this.createRequestHeaders(true)
       }
