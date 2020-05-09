@@ -48,12 +48,9 @@ function authenticateUsingAuthWindow() {
         createAppWindow();
         destroyAuthWin();
       }).then(data => {
-        createAppWindow();
-        destroyAuthWin();
-        return
 
         if (data == null) return
-        win.loadURL(authService.getAuthenticationURL());
+        authenticateUsingAuthWindow();
 
       })
     } catch(error){
