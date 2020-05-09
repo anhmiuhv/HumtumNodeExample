@@ -1,20 +1,19 @@
 const {app} = require('electron');
 
-const {createAuthWindow} = require('./main/auth-process');
+const {createAuthWindow, authenticateUsingAuthWindow} = require('./main/auth-process');
 const {createAppWindow} = require('./main/app-process');
 const authService = require('./services/auth-service');
 const humtum = require("./services/humtum")
 const envVariables = require('./env-variables');
 
-humtum.getAuth().setScopes(["read:appdata", "write:appdata"])
 
-humtum.setAPICredentials("123", "456")
 async function showWindow() {
   try {
     await authService.refreshTokens();
     return createAppWindow();
   } catch (err) {
     createAuthWindow();
+    authenticateUsingAuthWindow()
   }
 }
 

@@ -69,11 +69,6 @@ class HumTum {
       })
   }
 
-  setAPICredentials = (cid, csec) => {
-    this.config['clientID'] = cid
-    this.config['clientSecret'] = csec
-  }
-
   setBaseUrl = (baseUrl) => {
     this.config['baseUrl'] = baseUrl
   }

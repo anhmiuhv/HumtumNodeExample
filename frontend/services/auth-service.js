@@ -4,6 +4,10 @@ const url = require('url');
 const envVariables = require('../env-variables');
 const keytar = require('keytar');
 const os = require('os');
+const crypto = require('crypto');
+const qs = require('qs');
+const parse = require('url-parse');
+const cryptoRandomString = require('crypto-random-string');
 
 const {
   apiIdentifier,
@@ -19,7 +23,7 @@ let accessToken = null;
 let idToken = null;
 let profile = null;
 let refreshToken = null;
-let scopes = []
+let state = null;
 
 function getAccessToken() {
   return accessToken;
@@ -36,15 +40,26 @@ function getProfile() {
 function isAuthenticated() {
   return profile != null;
 }
-function check(x) {
-  return Array.isArray(x) && x.every(function (i) {
-    return typeof i === "string"
-  });
+
+function base64URLEncode(str) {
+  return str.toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }
 
-function setScopes(scope) {
-  if (check(scope))
-  scopes = scope
+
+function sha256(buffer) {
+  return crypto.createHash('sha256').update(buffer).digest();
+}
+
+function generateRandomChallengePair() {
+  const secret = base64URLEncode(crypto.randomBytes(32));
+  const hashed = base64URLEncode(sha256(secret));
+  return {
+    secret,
+    hashed
+  };
 }
 
 function getAuthenticationURL() {
@@ -84,8 +99,84 @@ function refreshTokens() {
     }
 });}
 
+async function exchangeCodeForToken(code, verifier, estate) {
+  const body = JSON.stringify({
+    redirect_uri: redirectUri,
+    grant_type: 'authorization_code',
+    code_verifier: verifier,
+    client_id: clientId,
+    code
+  });
+
+  if (state !== estate)
+    throw new Error("Invalid state")
+
+  const result = await axios({
+    url: `https://${auth0Domain}/oauth/token`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: body
+  });
+
+  if (result.status === 200 && result.statusText === 'OK')
+    {
+      let data = result.data
+      accessToken = data.access_token;
+      idToken = data.id_token
+      profile = idToken && jwtDecode(idToken);
+      refreshToken = data.refresh_token;
+      keytar.setPassword(keytarService, keytarAccount, refreshToken);
+      return
+    }
+
+  throw Error(result.status);
+}
+
+function extractCode(resultUrl) {
+  const response = parse(resultUrl, true).query;
+
+  if (response.error) {
+    throw new Error(response.error_description || response.error);
+  }
+
+  return {
+    code: response.code,
+    state: response.state
+  };
+}
+
+function getPKCEURLandSecret(options = {}) {
+
+  const {
+    secret,
+    hashed
+  } = generateRandomChallengePair();
+
+  state = cryptoRandomString({
+    length: 10
+  });
+
+  Object.assign(options, {
+    client_id: clientId,
+    code_challenge: hashed,
+    code_challenge_method: 'S256',
+    response_type: 'code',
+    state: state
+  });
+
+  const url = `https://${auth0Domain}/authorize?${qs.stringify(options)}`;
+  return { url, secret }
+  // const resultUrl = win.loadURL(url);;
+  // const code = extractCode(resultUrl);
+  // return exchangeCodeForToken(code, secret);
+}
+
+
 
 function loadTokens(callbackURL) {
+
   return new Promise(async (resolve, reject) => {
     const urlParts = url.parse(callbackURL, true);
     const query = urlParts.query;
@@ -148,5 +239,8 @@ module.exports = {
   refreshTokens,
   isAuthenticated,
   getIDToken,
-  setScopes
+  generateRandomChallengePair,
+  getPKCEURLandSecret,
+  extractCode,
+  exchangeCodeForToken
 };

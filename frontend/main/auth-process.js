@@ -15,8 +15,20 @@ function createAuthWindow() {
     width: 1000,
     height: 600,
   });
+}
 
-  win.loadURL(authService.getAuthenticationURL());
+function authenticateUsingAuthWindow() {
+  const { apiIdentifier, redirectUri } = envVariables
+  const {
+    url,
+    secret
+  } = authService.getPKCEURLandSecret({
+    audience: apiIdentifier,
+    scope: "openid email profile offline_access read:appdata write:appdata",
+    redirect_uri: redirectUri
+  })
+
+  win.loadURL(url);
 
   const {session: {webRequest}} = win.webContents;
 
@@ -28,13 +40,18 @@ function createAuthWindow() {
 
   webRequest.onBeforeRequest(filter, async ({url}) => {
     try {
-      await authService.loadTokens(url);
+      const {code , state} = authService.extractCode(url)
+      await authService.exchangeCodeForToken(code, secret, state)
+      // await authService.loadTokens(url);
+
       await humtum.enrollInApp(envVariables.appId, (e) => {
         createAppWindow();
         destroyAuthWin();
       }).then(data => {
-        console.log(1)
-        console.log(data)
+        createAppWindow();
+        destroyAuthWin();
+        return
+
         if (data == null) return
         win.loadURL(authService.getAuthenticationURL());
 
@@ -82,4 +99,5 @@ function createLogoutWindow() {
 module.exports = {
   createAuthWindow,
   createLogoutWindow,
+  authenticateUsingAuthWindow
 };
