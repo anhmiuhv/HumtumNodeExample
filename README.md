@@ -8,11 +8,13 @@ It is recommended that you understand how to use Auth0 before starting developin
 
 ## How to start running this client
 1. Create Humtum application Security Poke
+
 Go through the Humtum application creation workflow. In this example, we created an application named security_poke. Once security_poke is created, take note of the ID of the app and the api identifier of the app, which is in the format `com.humtum.api.<app-name>`. For our example, the api identifier is `com.humtum.api.security_poke`.
 
 ![How to find App id](img/appid.png)
 
 2. Create third party client ID
+
 Humtum Auth0 supports dynamic client registration based on the [OpenID Connect Dynamic Client Registration](https://openid.net/specs/openid-connect-registration-1_0.html) specification. Humtum Auth0 DOMAIN is humtum.auth0.com. Follow the instruction in this [link](https://auth0.com/docs/api-auth/dynamic-client-registration#register-your-application) to register a third party client ID. Replace YOUR_DOMAIN with `humtum.auth0.com`. For our examples, we can set the data to:
 ```json
 {
@@ -24,6 +26,7 @@ Humtum Auth0 supports dynamic client registration based on the [OpenID Connect D
 You need to store the response somewhere secure.
 
 3. Create environment files
+
 Clone this repository. Go to `frontend` folder.
 Create a file called env-variables.json with the following contents:
 ```json
@@ -37,6 +40,7 @@ Create a file called env-variables.json with the following contents:
 ```
 
 4. Run the code
+
 Run `npm start`
 
 
