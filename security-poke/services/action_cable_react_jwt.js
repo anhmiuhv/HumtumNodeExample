@@ -2,11 +2,11 @@
   (function () {
     (function () {
       var slice = [].slice;
-
-      global.document = {
-        addEventListener: function () {},
-        removeEventListener: function () {}
-      }
+      if (typeof global !== 'undefined')
+        global.document = {
+          addEventListener: function () {},
+          removeEventListener: function () {}
+        }
 
       this.ActionCable = {
         INTERNAL: {
@@ -254,7 +254,9 @@
             if (this.webSocket != null) {
               this.uninstallEventHandlers();
             }
-            this.webSocket = new WebSocket(this.consumer.url, protocols.concat(this.consumer.jwt), { origin: this.consumer.origin});
+            this.webSocket = new WebSocket(this.consumer.url, protocols.concat(this.consumer.jwt), {
+              origin: this.consumer.origin
+            });
             this.webSocket.protocol = 'actioncable-v1-json';
             this.installEventHandlers();
             this.monitor.start();
@@ -579,7 +581,10 @@
       ActionCable.Consumer = (function () {
         function Consumer(url, jwt) {
           this.url = url;
-          const {token, origin} = jwt;
+          const {
+            token,
+            origin
+          } = jwt;
           this.jwt = token;
           this.origin = origin
           this.subscriptions = new ActionCable.Subscriptions(this);
