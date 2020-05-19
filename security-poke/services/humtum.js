@@ -3,7 +3,7 @@
 const auth = require('./auth-service');
 const axios = require('axios');
 WebSocket = require('ws')
-const ActionCable = require('./action_cable_react_jwt');
+const ActionCable = require('humtum-action-cable-react-jwt');
 
 // HumTum lib should be unopinionated so should be decoupled from rest of
 // app. (e.g., stores)
