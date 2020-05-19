@@ -22,7 +22,6 @@ const keytarAccount = os.userInfo().username;
 let accessToken = null;
 let idToken = null;
 let profile = null;
-let refreshToken = null;
 let state = null;
 
 function getAccessToken() {
@@ -90,6 +89,8 @@ function refreshTokens() {
     try {
       const { data } = await axios(refreshOptions)
       accessToken = data.access_token;
+      if (data.refresh_token)
+      keytar.setPassword(keytarService, keytarAccount, data.refresh_token);
       idToken = data.id_token
       profile = idToken && jwtDecode(idToken);
       resolve();
@@ -126,7 +127,7 @@ async function exchangeCodeForToken(code, verifier, estate) {
       accessToken = data.access_token;
       idToken = data.id_token
       profile = idToken && jwtDecode(idToken);
-      refreshToken = data.refresh_token;
+      const refreshToken = data.refresh_token;
       keytar.setPassword(keytarService, keytarAccount, refreshToken);
       return
     }
@@ -147,6 +148,7 @@ function extractCode(resultUrl) {
   };
 }
 
+// Authorization Code Grant by PKCE
 function getPKCEURLandSecret(options = {}) {
 
   const {
@@ -174,7 +176,7 @@ function getPKCEURLandSecret(options = {}) {
 }
 
 
-
+// Authorization Code Grant example
 function loadTokens(callbackURL) {
 
   return new Promise(async (resolve, reject) => {
@@ -203,7 +205,7 @@ function loadTokens(callbackURL) {
       accessToken = data.access_token;
       idToken = data.id_token
       profile = idToken && jwtDecode(idToken);
-      refreshToken = data.refresh_token;
+      const refreshToken = data.refresh_token;
       keytar.setPassword(keytarService, keytarAccount, refreshToken);
 
 
@@ -221,7 +223,6 @@ async function logout(cb) {
   await keytar.deletePassword(keytarService, keytarAccount);
   accessToken = null;
   profile = null;
-  refreshToken = null;
   cb && cb();
 }
 
