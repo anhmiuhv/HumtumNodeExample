@@ -90,9 +90,12 @@ function refreshTokens() {
       const { data } = await axios(refreshOptions)
       accessToken = data.access_token;
       if (data.refresh_token)
-      keytar.setPassword(keytarService, keytarAccount, data.refresh_token);
+        keytar.setPassword(keytarService, keytarAccount, data.refresh_token);
       idToken = data.id_token
       profile = idToken && jwtDecode(idToken);
+      data.expires_in && setTimeout(() => {
+        refreshTokens()
+      }, data.expires_in * 1000);
       resolve();
     } catch (error) {
       await logout();
@@ -182,7 +185,6 @@ function loadTokens(callbackURL) {
   return new Promise(async (resolve, reject) => {
     const urlParts = url.parse(callbackURL, true);
     const query = urlParts.query;
-    console.log(query)
 
     const exchangeOptions = {
       'grant_type': 'authorization_code',
@@ -207,6 +209,9 @@ function loadTokens(callbackURL) {
       profile = idToken && jwtDecode(idToken);
       const refreshToken = data.refresh_token;
       keytar.setPassword(keytarService, keytarAccount, refreshToken);
+      data.expires_in && setTimeout(() => {
+        refreshTokens()
+      }, data.expires_in * 1000);
 
 
       resolve();

@@ -22,7 +22,6 @@ const keytarAccount = os.userInfo().username;
 let accessToken = null;
 let idToken = null;
 let profile = null;
-let refreshToken = null;
 let state = null;
 
 function getAccessToken() {
@@ -80,7 +79,9 @@ function refreshTokens() {
     const refreshOptions = {
       method: 'POST',
       url: `https://${auth0Domain}/oauth/token`,
-      headers: {'content-type': 'application/json'},
+      headers: {
+        'content-type': 'application/json'
+      },
       data: {
         grant_type: 'refresh_token',
         client_id: clientId,
@@ -88,16 +89,24 @@ function refreshTokens() {
       },
     };
     try {
-      const { data } = await axios(refreshOptions)
+      const {
+        data
+      } = await axios(refreshOptions)
       accessToken = data.access_token;
+      if (data.refresh_token)
+        keytar.setPassword(keytarService, keytarAccount, data.refresh_token);
       idToken = data.id_token
       profile = idToken && jwtDecode(idToken);
+      data.expires_in && setTimeout(() => {
+        refreshTokens()
+      }, data.expires_in * 1000);
       resolve();
     } catch (error) {
       await logout();
       return reject(error);
     }
-});}
+  });
+}
 
 async function exchangeCodeForToken(code, verifier, estate) {
   const body = JSON.stringify({
@@ -120,16 +129,15 @@ async function exchangeCodeForToken(code, verifier, estate) {
     data: body
   });
 
-  if (result.status === 200 && result.statusText === 'OK')
-    {
-      let data = result.data
-      accessToken = data.access_token;
-      idToken = data.id_token
-      profile = idToken && jwtDecode(idToken);
-      refreshToken = data.refresh_token;
-      keytar.setPassword(keytarService, keytarAccount, refreshToken);
-      return
-    }
+  if (result.status === 200 && result.statusText === 'OK') {
+    let data = result.data
+    accessToken = data.access_token;
+    idToken = data.id_token
+    profile = idToken && jwtDecode(idToken);
+    const refreshToken = data.refresh_token;
+    keytar.setPassword(keytarService, keytarAccount, refreshToken);
+    return
+  }
 
   throw Error(result.status);
 }
@@ -147,6 +155,7 @@ function extractCode(resultUrl) {
   };
 }
 
+// Authorization Code Grant by PKCE
 function getPKCEURLandSecret(options = {}) {
 
   const {
@@ -167,20 +176,22 @@ function getPKCEURLandSecret(options = {}) {
   });
 
   const url = `https://${auth0Domain}/authorize?${qs.stringify(options)}`;
-  return { url, secret }
+  return {
+    url,
+    secret
+  }
   // const resultUrl = win.loadURL(url);;
   // const code = extractCode(resultUrl);
   // return exchangeCodeForToken(code, secret);
 }
 
 
-
+// Authorization Code Grant example
 function loadTokens(callbackURL) {
 
   return new Promise(async (resolve, reject) => {
     const urlParts = url.parse(callbackURL, true);
     const query = urlParts.query;
-    console.log(query)
 
     const exchangeOptions = {
       'grant_type': 'authorization_code',
@@ -199,12 +210,17 @@ function loadTokens(callbackURL) {
     };
 
     try {
-      const { data } = await axios(options)
+      const {
+        data
+      } = await axios(options)
       accessToken = data.access_token;
       idToken = data.id_token
       profile = idToken && jwtDecode(idToken);
-      refreshToken = data.refresh_token;
+      const refreshToken = data.refresh_token;
       keytar.setPassword(keytarService, keytarAccount, refreshToken);
+      data.expires_in && setTimeout(() => {
+        refreshTokens()
+      }, data.expires_in * 1000);
 
 
       resolve();
@@ -213,7 +229,7 @@ function loadTokens(callbackURL) {
       return reject(error);
     }
 
-    
+
   });
 }
 
@@ -221,7 +237,6 @@ async function logout(cb) {
   await keytar.deletePassword(keytarService, keytarAccount);
   accessToken = null;
   profile = null;
-  refreshToken = null;
   cb && cb();
 }
 
