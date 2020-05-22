@@ -115,14 +115,12 @@ class HumTum {
     // The message requires these parameters
     const {
       description,
-      app_id,
       payload,
       targets
     } = message
     const result = await this.sendRequest(url, err, {
       message: {
         description: description,
-        app_id: app_id,
         payload: payload,
         targets: targets
       }
