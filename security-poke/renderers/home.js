@@ -34,7 +34,7 @@ function rejectFriendRequest(senderid, button) {
 }
 
 function refreshFriendRequests() {
-  humtum.getFriendRequests(envVariables.appId).then(data => {
+  return humtum.getFriendRequests(envVariables.appId).then(data => {
     listerner = []
     let txt = ""
     txt += "<table id=\"notitable\" class=\"table\"><tbody></tbody>"
@@ -62,7 +62,7 @@ function refreshFriendRequests() {
 }
 
 function refreshFriends() {
-  humtum.getFriends(envVariables.appId).then(data => {
+  return humtum.getFriends(envVariables.appId).then(data => {
     let txt = ""
     let listerner = []
     txt += "<table class=\"table\">"
@@ -94,7 +94,7 @@ function refreshFriends() {
 
 
 
-webContents.on('dom-ready', () => {
+webContents.on('dom-ready', async () => {
   const profile = authService.getProfile();
   document.getElementById('picture').src = profile.picture;
   document.getElementById('name').innerText = profile.name;
@@ -114,8 +114,8 @@ webContents.on('dom-ready', () => {
     profileHumtum = data
   })
 
-  refreshFriends()
-  refreshFriendRequests()
+  await refreshFriends()
+  await refreshFriendRequests()
 
   document.getElementById("friendsbtn").onclick = () => {
     humtum.addFriend(envVariables.appId, document.getElementById("friendid").value, (e) => {
@@ -129,8 +129,8 @@ webContents.on('dom-ready', () => {
 
   humtum.getMessage({unread: true}).then(data => {
     data && data.forEach(d => {
-        $('#notitable tr:last').after(`<tr><td>${d["sender"]["id"]}</td><td>${d.payload}</td></tr>`);
-        humtum.receiveMessage(d.id)
+        $('#notitable > tbody:last-child').after(`<tr><td>${d["sender"]["id"]}</td><td>${d.payload}</td></tr>`);
+        humtum.receiveMessage(d["id"])
     })
   })
 

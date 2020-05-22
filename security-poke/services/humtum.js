@@ -14,13 +14,18 @@ class HumTum {
     baseUrl: "http://localhost:3000"
   }
 
+  auth;
   user;
   cable;
   userCache = {}; // { id: { model: model, expiration: Date } }
   appCache = {};
 
+  setAuth = (a) => {
+    this.auth = a
+  }
+
   getAuth = () => {
-    return auth
+    return this.auth
   }
 
   logout = (cb) => {
@@ -39,11 +44,21 @@ class HumTum {
   }
 
   getCable = () => {
+    let generateCableToken = () => {
+      const jwt = JSON.stringify({
+        id_token: this.getAuth().getIDToken(),
+        access_token: this.getAuth().getAccessToken()
+      })
+      if (typeof Buffer !== 'undefined')
+        return Buffer.from(jwt, 'utf8').toString('base64').replace("=", "");
+      else
+        return window.btoa(jwt).replace(/=/g, "")
+    }
     if (this.cable)
       return this.cable
     this.cable = ActionCable.createConsumer(`ws://localhost:3001/cable`, {
       origin: "http://localhost:3000",
-      token: this.getAuth().getIDToken()
+      token: generateCableToken()
     })
     return this.cable
   }
@@ -117,7 +132,6 @@ class HumTum {
 
   getMessage = async (query, err = this.printErr) => {
     const url = `/messages`
-    
     return await this.sendRequest(url, err, query)
   }
 
@@ -299,6 +313,10 @@ class HumTum {
 
   getFriends = async (appID, err = this.printErr) => await this.getAppData(appID, "friends", err)
   getFriendRequests = async (appID, err = this.printErr) => await this.getAppData(appID, "friend_requests", err)
+  getFollowers = async (appID, err = this.printErr) => await this.getAppData(appID, "followers", err)
+  getFollowing = async (appID, err = this.printErr) => await this.getAppData(appID, "following", err)
+  getFollowerRequests = async (appID, err = this.printErr) => await this.getAppData(appID, "follower_requests", err)
+  getFollowingRequests = async (appID, err = this.printErr) => await this.getAppData(appID, "following_requests", err)
   getDevelopers = async (appID, err = this.printErr) => await this.getAppData(appID, "developers", err)
   getUsers = async (appID, err = this.printErr) => await this.getAppData(appID, "users", err)
   getAppUser = async (appID, uid, err = this.printErr) => {
@@ -370,7 +388,7 @@ class HumTum {
         headers: this.createRequestHeaders(true)
       }
       try {
-        const response = (method === 'post' ? await axios.post(url, formData, config) : await axios.put(url, formData, config))
+        const response = (method === 'post' ? await axios.post(`${this.config['baseUrl']}${url}`, formData, config) : await axios.put(`${this.config['baseUrl']}${url}`, formData, config))
         return response.data
       } catch (e) {
         err(e.response)
@@ -383,5 +401,6 @@ class HumTum {
 }
 
 const singleton = new HumTum();
+singleton.setAuth(auth)
 
 module.exports = singleton
