@@ -137,13 +137,30 @@ webContents.on('dom-ready', () => {
   refreshFollowing()
   refreshFriendRequests()
 
-  document.getElementById("friendsbtn").onclick = () => {
-    humtum.followOther(envVariables.appId, document.getElementById("friendid").value, (e) => {
-      $("#friendrequeststatus").text(String(e))
-    }).then(v => {
-      $("#friendrequeststatus").text(String(v))
-      refreshFriendRequests()
+   document.getElementById("friendsbtn").onclick = () => {
+    $("#searchstate").html("Searching")
+    humtum.searchUsersInApp(envVariables.appId, document.getElementById("friendid").value).then(data => {
+      let txt = ""
+      listender = []
+      console.log(data)
 
+      data && data.forEach(element => {
+        txt += `<tr><td>${element.name}</td>
+             <td><button class="btn btn-primary" id="follow${element.id}">Follow</button></td></tr>`;
+
+        listerner.push(() => {
+          $(`#follow${element.id}`).click(() => {
+            humtum.followOther(envVariables.appId, element.id).then(
+              v => {
+                $(`#follow${element.id}`).html("Sent")
+              }
+            )
+          })
+        })
+      })
+      $("#userresult").html(txt)
+      $("#searchstate").html("")
+      listerner.forEach(v => v())
     })
   }
 
@@ -161,7 +178,14 @@ webContents.on('dom-ready', () => {
           websitemsg: $("#webmessage").val()
         }),
         targets: alls
+      }).then(v => {
+        $("#broadcaststate").html("Sent")
+        setTimeout(() => {
+          $("#broadcaststate").html("")
+        }, 3000);
       })
+      $("#broadcaststate").html("Sending")
+
     })
 
   }
