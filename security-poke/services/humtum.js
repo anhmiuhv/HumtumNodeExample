@@ -280,6 +280,11 @@ class HumTum {
     return await this.sendRequest(url, err)
   }
 
+  searchAppData = async (appID, query, dataPath, err) => {
+    const url = `/apps/${appID}/${dataPath}?q=${query}`
+    return await this.sendRequest(url, err)
+  }
+
   putRelRequest = async (appID, friendID, type, data, err = this.printErr) => {
     const url = `/relationships/${appID}/${type}/${friendID}`
     console.log(url)
@@ -317,6 +322,8 @@ class HumTum {
   getFollowingRequests = async (appID, err = this.printErr) => await this.getAppData(appID, "following_requests", err)
   getDevelopers = async (appID, err = this.printErr) => await this.getAppData(appID, "developers", err)
   getUsers = async (appID, err = this.printErr) => await this.getAppData(appID, "users", err)
+  searchUsersInApp = async (appID, query, err = this.printErr) => await this.searchAppData(appID, query, "user_search", err)
+
   getAppUser = async (appID, uid, err = this.printErr) => {
     const url = `/apps/${appID}/user/${uid}`
     return await this.sendRequest(url, err)
