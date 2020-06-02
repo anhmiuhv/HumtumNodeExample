@@ -136,6 +136,9 @@ async function exchangeCodeForToken(code, verifier, estate) {
     profile = idToken && jwtDecode(idToken);
     const refreshToken = data.refresh_token;
     keytar.setPassword(keytarService, keytarAccount, refreshToken);
+    data.expires_in && setTimeout(() => {
+      refreshTokens()
+    }, data.expires_in * 1000);
     return
   }
 
