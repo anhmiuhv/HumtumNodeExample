@@ -34,7 +34,7 @@ function authenticateUsingAuthWindow() {
 
   const filter = {
     urls: [
-      'https://com.sentinel.linhhoang/*'
+      `${redirectUri}/*`
     ]
   };
 

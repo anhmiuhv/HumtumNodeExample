@@ -34,7 +34,7 @@ function authenticateUsingAuthWindow() {
 
   const filter = {
     urls: [
-      'http://com.securitypoke.linhhoang/*'
+      `${redirectUri}/*`
     ]
   };
 
