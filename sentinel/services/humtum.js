@@ -139,17 +139,6 @@ class HumTum {
     return result;
   }
 
-  getMyNotifications = async (err = this.printErr) => {
-    const url = '/users/notifications'
-    const notes = await this.sendRequest(url, err)
-    return notes;
-  }
-
-  getRecentNotifications = async (err = this.printErr) => {
-    const url = '/users/recent_notifications'
-    const notes = await this.sendRequest(url, err)
-    return notes;
-  }
 
   updateSelf = async (name, avatar, err = this.printErr) => {
     if (!this.user) {
@@ -172,14 +161,6 @@ class HumTum {
     return this.user;
   }
 
-  sendNotificationsReadReceipts = async (nIDs, err = this.printErr) => {
-    const url = `/users/read_notifications`
-    return await this.sendRequest(url, err, {
-      user: {
-        notifications_read: nIDs
-      }
-    }, 'put')
-  }
 
   getModel = async (id, modelURL, cache, err) => {
     if (cache[id] && new Date().getTime() < cache[id].expiration) {
@@ -226,43 +207,6 @@ class HumTum {
   getMyApps = async (err = this.printErr) => {
     const url = `/apps`
     return await this.sendRequest(url, err)
-  }
-
-  createNewApp = async (params, err = this.printErr) => {
-    // return await this.createNewModel({ app: params }, "apps", this.appCache, err)
-    const fd = new FormData();
-    fd.append('app[name]', params.name)
-    fd.append('app[description]', params.description)
-    fd.append('app[visibility]', params.visibility)
-    fd.append('app[avatar]', params.avatar)
-    fd.append('app[config][relationship_approvals]', params.config.relationship_approvals)
-    fd.append('app[config][relationship_type]', params.config.relationship_type)
-    fd.append('app[config][relationship_reset_offset]', params.config.relationship_reset_offset)
-    fd.append('app[config][send_dev_joined_notifications]', params.config.send_dev_joined_notifications)
-    fd.append('app[config][send_user_joined_notifications]', params.config.send_user_joined_notifications)
-    fd.append('app[config][send_user_left_notifications]', params.config.send_user_left_notifications)
-    return await this.sendMultipartRequest("/apps", err, fd)
-  }
-
-  updateApp = async (id, params, err = this.printErr) => {
-    const fd = new FormData();
-    fd.append('app[name]', params.name)
-    fd.append('app[description]', params.description)
-    fd.append('app[visibility]', params.visibility)
-    fd.append('app[config][relationship_approvals]', params.config.relationship_approvals)
-    fd.append('app[config][relationship_type]', params.config.relationship_type)
-    fd.append('app[config][relationship_reset_offset]', params.config.relationship_reset_offset)
-    fd.append('app[config][send_dev_joined_notifications]', params.config.send_dev_joined_notifications)
-    fd.append('app[config][send_user_joined_notifications]', params.config.send_user_joined_notifications)
-    fd.append('app[config][send_user_left_notifications]', params.config.send_user_left_notifications)
-    if (params.avatar) {
-      fd.append('app[avatar]', params.avatar)
-    }
-    return await this.sendMultipartRequest(`/apps/${id}`, err, fd, 'put')
-  }
-
-  getApp = async (id, err = this.printErr) => {
-    return await this.getModel(id, "apps", this.appCache, err)
   }
 
   enrollInApp = async (id, err = this.printErr) => {
@@ -328,43 +272,6 @@ class HumTum {
     const url = `/apps/${appID}/user/${uid}`
     return await this.sendRequest(url, err)
   }
-  getActivity = async (appID, err = this.printErr) => await this.getAppData(appID, "activity", err)
-  getActivityAsAdmin = async (appID, err = this.printErr) => await this.getAppData(appID, "admin_activity", err)
-  getNotifications = async (appID, err = this.printErr) => await this.getAppData(appID, "notifications", err)
-  getClientSecret = async (appID, err = this.printErr) => await this.getAppData(appID, "secret", err)
-
-  putAdminRequest = async (appID, action, target_ids, err) => {
-    const url = `/admin/${appID}/${action}`
-
-    const fd = new FormData();
-    fd.append('admin[target_ids]', target_ids)
-
-    return await this.sendMultipartRequest(url, this.printErr, fd, 'put')
-  }
-
-  putDevAdminRequest = async (appID, action, uid, err) => {
-    const url = `/admin/${appID}/${action}${uid === undefined ? "" : `/${uid}`}`
-
-    return await this.sendRequest(url, err, {}, 'put')
-  }
-
-  freezeTargetAccounts = async (appID, target_ids, err = this.printErr) => await this.putAdminRequest(appID, "freeze", target_ids, err)
-  unfreezeTargetAccounts = async (appID, target_ids, err = this.printErr) => await this.putAdminRequest(appID, "unfreeze", target_ids, err)
-  banTargetAccounts = async (appID, target_ids, err = this.printErr) => await this.putAdminRequest(appID, "ban", target_ids, err)
-  unbanTargetAccounts = async (appID, target_ids, err = this.printErr) => await this.putAdminRequest(appID, "unban", target_ids, err)
-
-  inviteDeveloper = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_invite", devID, err)
-  promoteDeveloper = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_promote", devID, err)
-  demoteDeveloper = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_demote", devID, err)
-  rescindDevInvite = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_rescind_invite", devID, err)
-  markDevInactive = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_mark_inactive", devID, err)
-  markDevActive = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_mark_active", devID, err)
-  removeDev = async (appID, devID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_remove", devID, err)
-  acceptInvite = async (appID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_accept_invite", undefined, err)
-  rejectInvite = async (appID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_reject_invite", undefined, err)
-  stepDown = async (appID, err = this.printErr) => await this.putDevAdminRequest(appID, "dev_step_down", undefined, err)
-
-  destroyApp = async (appID, err = this.printErr) => await this.sendRequest(`/apps/${appID}`, err, {}, 'delete')
 
 
   sendRequest = async (url, err, data = {}, method = 'get') => {
