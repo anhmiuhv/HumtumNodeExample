@@ -12,19 +12,19 @@ let profileHumtum = null
 const webContents = remote.getCurrentWebContents();
 window.jQuery = window.$ = require('jquery');
 
-function approveFriendRequest(senderid, button) {
-  humtum.approveFriendRequest(envVariables.appId, senderid, (e) => {
+function approveFollowRequest(senderid, button) {
+  humtum.approveFollowRequest(envVariables.appId, senderid, (e) => {
     button.html("Error!")
     button.prop("disabled", true)
   }).then(v => {
     button.html("Approved")
     button.prop("disabled", true)
-    refreshFriends()
+    refreshFollowers()
   })
 }
 
-function rejectFriendRequest(senderid, button) {
-  humtum.rejectFriendRequest(envVariables.appId, senderid, (e) => {
+function rejectFollowRequest(senderid, button) {
+  humtum.rejectFollowRequest(envVariables.appId, senderid, (e) => {
     button.html("Error!")
     button.prop("disabled", true)
   }).then(v => {
@@ -33,7 +33,7 @@ function rejectFriendRequest(senderid, button) {
   })
 }
 
-function refreshFriendRequests() {
+function refreshFollowRequests() {
   humtum.getFollowerRequests(envVariables.appId).then(data => {
     listerner = []
     let txt = ""
@@ -48,10 +48,10 @@ function refreshFriendRequests() {
       </tr>`;
       listerner.push(() => {
         $(`#friendrequestreceivedbutton${element.id}`).click(function () {
-          approveFriendRequest(element.sender.id, $(this))
+          approveFollowRequest(element.sender.id, $(this))
         })
         $(`#friendrequestreceivedbutton${element.id}reject`).click(function () {
-          rejectFriendRequest(element.sender.id, $(this))
+          rejectFollowRequest(element.sender.id, $(this))
         })
       })
     });
@@ -135,7 +135,7 @@ webContents.on('dom-ready', () => {
 
   refreshFollowers()
   refreshFollowing()
-  refreshFriendRequests()
+  refreshFollowRequests()
 
    document.getElementById("friendsbtn").onclick = () => {
     $("#searchstate").html("Searching")
