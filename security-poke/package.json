@@ -10,7 +10,7 @@
   "author": "Linh Hoang (anhmiuhv@yahoo.com.vn)",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^8.2.5",
+    "electron": "^11.5.0",
     "electron-rebuild": "^1.10.1",
     "electron-reloader": "^1.0.1"
   },
